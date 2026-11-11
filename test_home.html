@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VENHA PARA SETEC</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="ambient" aria-hidden="true">
+<div class="ambient-gradient"></div>
+<canvas id="ambientCanvas"></canvas>
+<div class="ambient-vignette"></div>
+</div>
+<main class="shell">
+<header><div class="brand">
+<canvas id="mcAvatar" width="32" height="32" aria-hidden="true"></canvas>
+<span class="brand-name">MC</span>
+</div>
+<div class="stats"><div class="stat-score">PONTOS<strong id="score">0</strong></div><div class="stat-time">TEMPO<strong id="time">75</strong></div><div class="stat-lives">VIDAS<strong id="lives">♥♥♥</strong></div></div></header>
+<section class="area"><canvas id="game" width="1044" height="684"></canvas>
+<div id="screen" class="overlay">
+<canvas id="menuBg" width="1044" height="684" aria-hidden="true"></canvas>
+<div class="scanlines" aria-hidden="true"></div>
+<span class="corner corner-bl" aria-hidden="true">v1.0</span>
+<span class="corner corner-br" aria-hidden="true">Desenvolvido por MC</span>
+
+<section id="homeScreen" class="screen-panel home-panel">
+<img class="hero-logo" src="Img/Título Pixelado Neon_ Venha Para Setec.png" alt="VENHA PARA SETEC">
+<p class="tagline">O SINAL TOCOU — CORRA ATÉ A SAÍDA</p>
+<div class="menu-actions">
+<button id="start" class="btn btn-start">INICIAR JOGO</button>
+<button id="howBtn" class="btn btn-outline">COMO JOGAR</button>
+</div>
+<small class="menu-note">WASD / SETAS · ENTER PARA JOGAR</small>
+</section>
+
+<section id="howScreen" class="screen-panel hidden">
+<div class="mini-label">GUIA DE FUGA</div>
+<h2>COMO JOGAR</h2>
+<p class="screen-sub">Encontre as quatro chaves e alcance a saída antes que os fantasmas peguem você.</p>
+<ul class="how-list">
+<li><span class="pixel-dot"></span><span>Mova-se com <b>W A S D</b> ou com as <b>setas</b> do teclado.</span></li>
+<li><span class="pixel-dot dot-yellow"></span><span>Colete as <b>4 chaves douradas</b> para destrancar a saída.</span></li>
+<li><span class="pixel-dot dot-purple"></span><span>Pegue <b>moedas</b> e <b>livros</b> para aumentar a pontuação.</span></li>
+<li><span class="pixel-dot dot-pink"></span><span>Fuja dos fantasmas: cada toque custa <b>uma vida</b>.</span></li>
+<li><span class="pixel-dot dot-green"></span><span>Complete as <b>10 fases</b> para escapar da Setec.</span></li>
+</ul>
+<div class="menu-actions">
+<button id="backHow" class="btn btn-outline">VOLTAR</button>
+</div>
+</section>
+
+<section id="diffScreen" class="screen-panel hidden">
+<div class="mini-label">PREPARE-SE</div>
+<h2>ESCOLHA A DIFICULDADE</h2>
+<p class="screen-sub">Quanto maior o nível, mais rápidos e espertos ficam os fantasmas.</p>
+<div class="difficulty" id="difficulty">
+<button class="diff-btn" data-diff="easy">FÁCIL</button>
+<button class="diff-btn active" data-diff="medium">MÉDIO</button>
+<button class="diff-btn" data-diff="hard">DIFÍCIL</button>
+</div>
+<small id="diffInfo">Os fantasmas revezam entre perseguir você e patrulhar.</small>
+<div class="menu-actions">
+<button id="beginBtn" class="btn btn-start">JOGAR</button>
+<button id="backDiff" class="btn btn-outline">VOLTAR</button>
+</div>
+</section>
+
+<section id="endScreen" class="screen-panel hidden">
+<div class="mini-label" id="endLabel">FIM DE JOGO</div>
+<h2 id="endTitle">Fim de jogo</h2>
+<p id="endText" class="screen-sub"></p>
+<div class="menu-actions">
+<button id="replayBtn" class="btn btn-start">JOGAR NOVAMENTE</button>
+<button id="menuBtn" class="btn btn-outline">MENU PRINCIPAL</button>
+</div>
+</section>
+</div>
+<div id="msg" class="msg hidden"></div></section>
+<footer><span>Fase <b id="level">1</b>/10</span><span id="objective">Chaves: 0/4</span></footer>
+</main><script src="script.js"></script>
+<script>
+setTimeout(()=>{
+ const vis=id=>!document.getElementById(id).classList.contains("hidden");
+ const r=[];
+ r.push("home="+vis("homeScreen"));
+ document.getElementById("start").click();
+ r.push("afterStart:home="+vis("homeScreen")+",diff="+vis("diffScreen"));
+ document.getElementById("backDiff").click();
+ r.push("afterBack:home="+vis("homeScreen")+",diff="+vis("diffScreen"));
+ document.getElementById("howBtn").click();
+ r.push("how="+vis("howScreen"));
+ document.getElementById("backHow").click();
+ r.push("home2="+vis("homeScreen"));
+ const panel=document.querySelector(".screen-panel:not(.hidden)");
+ const logo=document.querySelector(".hero-logo");
+ const area=document.querySelector(".area");
+ const rect=e=>{const b=e.getBoundingClientRect();return [Math.round(b.x),Math.round(b.y),Math.round(b.width),Math.round(b.height)].join("x")};
+ r.push("area="+rect(area)+",panel="+rect(panel)+",logo="+rect(logo));
+ document.getElementById("start").click();
+ document.getElementById("beginBtn").click();
+ r.push("game:overlayHidden="+document.getElementById("screen").classList.contains("hidden"));
+ const out=document.createElement("pre");out.id="test-result";out.textContent=r.join(" | ");document.body.appendChild(out);
+},400);
+</script>
+</body></html>

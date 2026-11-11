@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070d18">
+<meta name="description" content="VENHA PARA SETEC — arcade em pixel art. Colete as quatro chaves e escape do labirinto!">
+<title>VENHA PARA SETEC</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="ambient" aria-hidden="true">
+<div class="ambient-gradient"></div>
+<canvas id="ambientCanvas"></canvas>
+<div class="ambient-vignette"></div>
+</div>
+
+<main class="shell">
+<header>
+<div class="brand">
+<canvas id="mcAvatar" width="32" height="32" aria-hidden="true"></canvas>
+<span class="brand-name">MC</span>
+</div>
+<div class="stats" role="group" aria-label="Indicadores do jogo">
+<div class="stat stat-score">
+<svg class="stat-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 1h4v1H3zM2 2h6v1H2zM1 3h8v1H1zM1 4h8v1H1zM1 5h8v1H1zM2 6h6v1H2zM3 7h4v1H3z" fill="currentColor"/><path d="M4 3h2v1H4zM4 4h2v1H4zM4 5h2v1H4z" fill="#6e5210"/></svg>
+<span class="stat-label">PONTOS</span><strong id="score">0</strong>
+</div>
+<div class="stat stat-time">
+<svg class="stat-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 1h4v1H3zM2 2h1v1H2zM7 2h1v1H7zM1 3h1v1H1zM8 3h1v1H8zM1 4h1v1H1zM4 4h4v1H4zM8 4h1v1H8zM1 5h1v1H1zM4 5h1v1H4zM5 5h1v1H5zM8 5h1v1H8zM2 6h6v1H2zM3 7h4v1H3z" fill="currentColor"/><path d="M4 3h2v1H4z" fill="currentColor"/></svg>
+<span class="stat-label">TEMPO</span><strong id="time">75</strong>
+</div>
+<div class="stat stat-lives">
+<svg class="stat-ico heart-ico" viewBox="0 0 11 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 1h2v1H2zM7 1h2v1H7zM1 2h8v1H1zM0 3h11v1H0zM0 4h11v1H0zM1 5h9v1H1zM2 6h7v1H2zM3 7h5v1H3zM4 8h3v1H4zM5 9h1v1H5z" fill="currentColor"/></svg>
+<span class="stat-label">VIDAS</span><span id="lives" class="hearts"></span>
+</div>
+</div>
+</header>
+
+<section class="area"><canvas id="game" width="1044" height="684"></canvas>
+<div id="screen" class="overlay">
+<canvas id="menuBg" width="1044" height="684" aria-hidden="true"></canvas>
+<div class="scanlines" aria-hidden="true"></div>
+<span class="corner corner-bl" aria-hidden="true">v1.0</span>
+<span class="corner corner-br" aria-hidden="true">Desenvolvido por MC</span>
+
+<section id="homeScreen" class="screen-panel home-panel">
+<h1 class="sr-only">VENHA PARA SETEC</h1>
+<img class="hero-logo" src="Img/Título Pixelado Neon_ Venha Para Setec.png" alt="VENHA PARA SETEC">
+<p class="tagline">O PORTÃO ABRIU – VENHA EXPLORAR A SETEC</p>
+<div class="menu-actions">
+<button id="start" class="btn btn-start"><svg class="btn-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 1v8l7-4z" fill="currentColor"/></svg>INICIAR JOGO</button>
+<button id="howBtn" class="btn btn-outline"><svg class="btn-ico" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 2h4v1H1zM1 3h4v1H1zM1 4h4v1H1zM1 5h4v1H1zM1 6h4v1H1zM7 2h4v1H7zM7 3h4v1H7zM7 4h4v1H7zM7 5h4v1H7zM7 6h4v1H7zM1 8h10v1H1zM1 9h10v1H1z" fill="currentColor"/></svg>COMO JOGAR</button>
+</div>
+<small class="menu-note">WASD / SETAS · ENTER PARA JOGAR</small>
+</section>
+
+<section id="howScreen" class="screen-panel hidden">
+<div class="mini-label">GUIA DE FUGA</div>
+<h2>COMO JOGAR</h2>
+<p class="screen-sub">Encontre as quatro chaves e alcance a saída antes que os fantasmas peguem você.</p>
+<ul class="how-list">
+<li>
+<svg class="how-ico ico-cyan" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 1h4v3H4zM1 5h3v3H1zM5 5h3v3H5zM9 5h3v3H9zM1 9h11v2H1z" fill="currentColor"/></svg>
+<span>Mova-se com <b>W A S D</b> ou com as <b>setas</b> do teclado.</span>
+</li>
+<li>
+<svg class="how-ico ico-yellow" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 2h6v1H1zM1 3h6v1H1zM1 4h6v1H1zM1 5h6v1H1zM2 6h4v1H2zM3 7h2v1H3zM4 8h1v1H4zM6 7h1v1H6zM7 8h1v1H7zM8 9h1v1H8zM9 10h1v1H9z" fill="currentColor"/></svg>
+<span>Colete as <b>4 chaves douradas</b> para destrancar a saída.</span>
+</li>
+<li>
+<svg class="how-ico ico-purple" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 1h6v1H3zM2 2h8v1H2zM1 3h10v1H1zM1 4h10v1H1zM1 5h10v1H1zM2 6h8v1H2zM3 7h6v1H3zM4 8h4v1H4zM5 9h2v1H5z" fill="currentColor"/><path d="M5 3h2v1H5zM5 4h2v1H5zM5 5h2v1H5z" fill="#0a1324"/></svg>
+<span>Pegue <b>moedas</b> e <b>livros</b> para aumentar a pontuação.</span>
+</li>
+<li>
+<svg class="how-ico ico-pink" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 4h1V3h1V2h4v1h1v1h1v1h1v4h-1v1h-1v1H3v-1H2v-1H1V5h1z" fill="currentColor"/><path d="M4 5h2v2H4zM7 5h2v2H7z" fill="#0a1324"/><path d="M4 6h1v1H4zM7 6h1v1H7z" fill="#f4f7fc"/></svg>
+<span>Fuja dos fantasmas: cada toque custa <b>uma vida</b>.</span>
+</li>
+<li>
+<svg class="how-ico ico-green" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 1h1v10H2zM3 1h7v1H3zM3 2h6v1H3zM3 3h6v1H3zM3 4h5v1H3zM3 5h6v1H3zM3 6h5v1H3z" fill="currentColor"/></svg>
+<span>Complete as <b>10 fases</b> para chegar na Setec.</span>
+</li>
+</ul>
+<div class="menu-actions">
+<button id="backHow" class="btn btn-outline"><svg class="btn-ico" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M5 2v2H3v2H1v2h2v2h2v2h2V8h2V6h2V4H9V2H7v2H5z" fill="currentColor"/></svg>VOLTAR</button>
+</div>
+</section>
+
+<section id="diffScreen" class="screen-panel hidden">
+<div class="mini-label">PREPARE-SE</div>
+<h2>ESCOLHA A DIFICULDADE</h2>
+<p class="screen-sub">Quanto maior o nível, mais rápidos e espertos ficam os fantasmas.</p>
+<div class="difficulty" id="difficulty">
+<button class="diff-btn" data-diff="easy"><span class="diff-pips" aria-hidden="true"><i></i><i class="off"></i><i class="off"></i></span>FÁCIL</button>
+<button class="diff-btn active" data-diff="medium"><span class="diff-pips" aria-hidden="true"><i></i><i></i><i class="off"></i></span>MÉDIO</button>
+<button class="diff-btn" data-diff="hard"><span class="diff-pips" aria-hidden="true"><i></i><i></i><i></i></span>DIFÍCIL</button>
+</div>
+<small id="diffInfo">Os fantasmas revezam entre perseguir você e patrulhar.</small>
+<div class="menu-actions">
+<button id="beginBtn" class="btn btn-start"><svg class="btn-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 1v8l7-4z" fill="currentColor"/></svg>JOGAR</button>
+<button id="backDiff" class="btn btn-outline"><svg class="btn-ico" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M5 2v2H3v2H1v2h2v2h2v2h2V8h2V6h2V4H9V2H7v2H5z" fill="currentColor"/></svg>VOLTAR</button>
+</div>
+</section>
+
+<section id="endScreen" class="screen-panel hidden">
+<div class="mini-label" id="endLabel">FIM DE JOGO</div>
+<h2 id="endTitle">Fim de jogo</h2>
+<p id="endText" class="screen-sub"></p>
+<div class="end-accent" aria-hidden="true"></div>
+<div class="menu-actions">
+<button id="replayBtn" class="btn btn-start"><svg class="btn-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 1v8l7-4z" fill="currentColor"/></svg>JOGAR NOVAMENTE</button>
+<button id="menuBtn" class="btn btn-outline"><svg class="btn-ico" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 2h10v1H1zM1 5h10v1H1zM1 8h10v1H1z" fill="currentColor"/></svg>MENU PRINCIPAL</button>
+</div>
+</section>
+</div>
+<div id="msg" class="msg hidden"></div></section>
+<footer><span>Fase <b id="level">1</b>/10</span><span id="objective">Chaves: 0/4</span></footer>
+</main>
+<script src="script.js"></script>
+</body>
+</html>

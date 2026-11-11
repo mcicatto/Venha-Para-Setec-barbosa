@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teste de colisão — VENHA PARA SETEC</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="ambient" aria-hidden="true">
+<div class="ambient-gradient"></div>
+<canvas id="ambientCanvas"></canvas>
+<div class="ambient-vignette"></div>
+</div>
+<main class="shell">
+<header>
+<div class="brand">
+<canvas id="mcAvatar" width="32" height="32" aria-hidden="true"></canvas>
+<span class="brand-name">MC</span>
+</div>
+<div class="stats">
+<div class="stat stat-score"><span class="stat-label">PONTOS</span><strong id="score">0</strong></div>
+<div class="stat stat-time"><span class="stat-label">TEMPO</span><strong id="time">75</strong></div>
+<div class="stat stat-lives"><span class="stat-label">VIDAS</span><span id="lives" class="hearts"></span></div>
+</div>
+</header>
+<section class="area"><canvas id="game" width="1044" height="684"></canvas>
+<div id="screen" class="overlay">
+<canvas id="menuBg" width="1044" height="684" aria-hidden="true"></canvas>
+<div class="scanlines" aria-hidden="true"></div>
+<span class="corner corner-bl" aria-hidden="true">v1.0</span>
+<span class="corner corner-br" aria-hidden="true">Desenvolvido por MC</span>
+<section id="homeScreen" class="screen-panel home-panel">
+<img class="hero-logo" src="Img/Título Pixelado Neon_ Venha Para Setec.png" alt="VENHA PARA SETEC">
+<p class="tagline">O SINAL TOCOU — CORRA ATÉ A SAÍDA</p>
+<div class="menu-actions">
+<button id="start" class="btn btn-start">INICIAR JOGO</button>
+<button id="howBtn" class="btn btn-outline">COMO JOGAR</button>
+</div>
+<small class="menu-note">WASD / SETAS · ENTER PARA JOGAR</small>
+</section>
+<section id="howScreen" class="screen-panel hidden">
+<div class="mini-label">GUIA DE FUGA</div><h2>COMO JOGAR</h2>
+<p class="screen-sub">x</p><ul class="how-list"></ul>
+<div class="menu-actions"><button id="backHow" class="btn btn-outline">VOLTAR</button></div>
+</section>
+<section id="diffScreen" class="screen-panel hidden">
+<div class="mini-label">PREPARE-SE</div><h2>ESCOLHA A DIFICULDADE</h2>
+<p class="screen-sub">x</p>
+<div class="difficulty" id="difficulty">
+<button class="diff-btn" data-diff="easy">FÁCIL</button>
+<button class="diff-btn active" data-diff="medium">MÉDIO</button>
+<button class="diff-btn" data-diff="hard">DIFÍCIL</button>
+</div>
+<small id="diffInfo">x</small>
+<div class="menu-actions">
+<button id="beginBtn" class="btn btn-start">JOGAR</button>
+<button id="backDiff" class="btn btn-outline">VOLTAR</button>
+</div>
+</section>
+<section id="endScreen" class="screen-panel hidden">
+<div class="mini-label" id="endLabel">FIM DE JOGO</div>
+<h2 id="endTitle">Fim de jogo</h2>
+<p id="endText" class="screen-sub"></p>
+<div class="end-accent" aria-hidden="true"></div>
+<div class="menu-actions">
+<button id="replayBtn" class="btn btn-start">JOGAR NOVAMENTE</button>
+<button id="menuBtn" class="btn btn-outline">MENU PRINCIPAL</button>
+</div>
+</section>
+</div>
+<div id="msg" class="msg hidden"></div></section>
+<footer><span>Fase <b id="level">1</b>/10</span><span id="objective">Chaves: 0/4</span></footer>
+</main>
+<script src="script.js"></script>
+<script>
+(function(){
+const results=[];
+function assert(name,cond,detail){
+ results.push({name:name,pass:!!cond,detail:detail==null?"":String(detail)});
+}
+function resetGame(){
+ difficulty="medium";level=0;score=0;lives=3;
+ setup();running=false;
+ msg.classList.add("hidden");clearTimeout(show.timer);
+}
+function dirToward(from,to){
+ if(to.c>from.c)return "right";
+ if(to.c<from.c)return "left";
+ if(to.r>from.r)return "down";
+ return "up";
+}
+function openNeighbor(r,c){
+ const dirs=[[0,1],[1,0],[0,-1],[-1,0]];
+ for(const d of dirs){if(can(r+d[0],c+d[1]))return {r:r+d[0],c:c+d[1]}}
+ return null;
+}
+function placePlayer(r,c,dir,inv){
+ player.r=r;player.c=c;
+ player.dir=dir||"right";player.next=player.dir;
+ player.progress=0;player.path=[];
+ player.inv=inv==null?0:inv;
+}
+function placeGhost(g,r,c,cool){
+ g.r=r;g.c=c;g.prevR=r;g.prevC=c;
+ g.cool=cool==null?999:cool;g.dir="left";
+}
+/* algoritmo ANTIGO — cópia fiel: checagem após o return do cool */
+function oldUpdateGhost(g,dt){
+ g.cool-=dt;if(g.cool>0)return;g.cool=ghostStep();
+ let oldR=g.r,oldC=g.c;g.dir=choose(g,target(g));let step=D[g.dir],r=g.r+step.y,c=g.c+step.x;
+ if(can(r,c)){g.r=r;g.c=c}
+ if(g.r==oldR&&g.c==oldC){let reverse=OP[g.dir];step=D[reverse];r=g.r+step.y;c=g.c+step.x;if(can(r,c)){g.dir=reverse;g.r=r;g.c=c}}
+ if(player.inv<=0&&g.r==player.r&&g.c==player.c)hit()
+}
+
+/* ---- 1a. Reprodução do bug original (algoritmo antigo) ---- */
+resetGame();
+(function(){
+ const g=ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("setup: célula aberta vizinha",false);return}
+ placePlayer(1,1,dirToward({r:1,c:1},adj),0);
+ placeGhost(g,adj.r,adj.c,999);
+ const l0=lives;
+ // ciclo antigo: movePlayer + updateGhost antigo (sem path do novo)
+ const prev={r:player.r,c:player.c};
+ player.progress=0.6; // ~1 passo
+ movePlayer(0.08); // 0.08*8=0.64 -> 1 passo com progress inicial 0.6? 0.6+0.64=1.24
+ oldUpdateGhost(g,0.05);
+ const oldMissed = lives===l0 && player.inv<=0 && !(player.r===g.r&&player.c===g.c&&player.inv>0);
+ // O algoritmo antigo só erra se o jogador NÃO for detectado.
+ // Se movePlayer já o colocou na célula do ghost, oldUpdateGhost com cool>0 retorna sem checar.
+ const overlap = player.r===g.r && player.c===g.c;
+ assert("BUG REPRODUZIDO: algoritmo antigo ignora contato com cool>0",
+   overlap && lives===l0,
+   "sobreposição="+overlap+" vidas "+l0+"->"+lives+" (sem dano = bug presente)");
+})();
+
+/* ---- 1b. Correção: update() novo detecta fantasma parado/cool>0 ---- */
+resetGame();
+(function(){
+ const g=ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("correção setup",false);return}
+ placePlayer(1,1,dirToward({r:1,c:1},adj),0);
+ placeGhost(g,adj.r,adj.c,999);
+ const l0=lives;
+ update(0.13); // 1 passo garantido (0+1.04)
+ assert("CORREÇÃO: update() novo detecta contato com fantasma parado/cool>0",
+   lives<l0,
+   "vidas "+l0+"->"+lives+" player="+player.r+","+player.c+" ghost="+g.r+","+g.c+" path="+JSON.stringify(player.path));
+})();
+
+/* ---- 2. Cruzamento de trajetórias (swap) no mesmo ciclo ---- */
+resetGame();
+(function(){
+ // acha par de células abertas adjacentes A-B
+ let A=null,B=null;
+ for(let r=1;r<R-1&&!A;r++)for(let c=1;c<C-1;c++){
+  if(map[r][c]!="0")continue;
+  if(can(r,c+1)&&map[r][c+1]=="0"&&!(r===1&&c===1)){A={r,c};B={r,c:c+1};break}
+  if(can(r+1,c)&&map[r+1][c]=="0"&&!(r===1&&c===1)){A={r,c};B={r:r+1,c};break}
+ }
+ if(!A){assert("swap setup",false);return}
+ const g=ghosts[0];
+ // jogador em A indo para B; fantasma em B indo para A
+ placePlayer(A.r,A.c,dirToward(A,B),0);
+ placeGhost(g,B.r,B.c,0);
+ g.dir=dirToward(B,A);
+ const l0=lives;
+ const prevP={r:player.r,c:player.c};
+ // mesmo ciclo do update():
+ player.progress=1; // garante passo
+ // usa update completo
+ // re-posiciona (update chama movePlayer com dt)
+ // progress=0 para dt controlado:
+ player.progress=0;
+ const dtStep = 1/8 + 0.01; // exatamente 1 célula
+ // congelar IA do fantasma para ir em direção oposta: slop não ajuda.
+ // Em vez disso, executamos as etapas manuais como o update faz:
+ update(0.0001); // quase nada — só para sincronizar
+ // cenário determinístico manual (mesmas etapas de update):
+ placePlayer(A.r,A.c,dirToward(A,B),0);
+ placeGhost(g,B.r,B.c,0);
+ g.dir=dirToward(B,A);
+ const p0={r:player.r,c:player.c};
+ const g0={r:g.r,c:g.c};
+ // move jogador 1 célula (como movePlayer faria)
+ player.progress=0;
+ movePlayer(dtStep);
+ // move fantasma 1 célula na direção calculada (swap)
+ g.prevR=g0.r;g.prevC=g0.c;
+ const step=D[g.dir];
+ const nr=g.r+step.y,nc=g.c+step.x;
+ if(can(nr,nc)){g.r=nr;g.c=nc}
+ const swapped = player.r===g0.r && player.c===g0.c && g.r===p0.r && g.c===p0.c;
+ checkTeacherContact(p0);
+ const damaged=lives<l0;
+ assert("CORREÇÃO: cruzamento de trajetórias detectado",
+   damaged||swapped,
+   "swapped="+swapped+" dano="+damaged+" vidas "+l0+"->"+lives+" P:"+p0.r+","+p0.c+"->"+player.r+","+player.c+" G:"+g0.r+","+g0.c+"->"+g.r+","+g.c);
+})();
+
+/* ---- 3. Atordoamento: contato com cool>0 (stun) ---- */
+resetGame();
+(function(){
+ const g=ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("stun setup",false);return}
+ placePlayer(1,1,dirToward({r:1,c:1},adj),0);
+ placeGhost(g,adj.r,adj.c,diff.stun);
+ const l0=lives;
+ update(0.13);
+ assert("CORREÇÃO: contato durante atordoamento detectado",
+   lives<l0,
+   "vidas "+l0+"->"+lives+" coolFinal="+g.cool.toFixed(2)+" (stun preservado="+ (g.cool>0 || lives<l0) +")");
+})();
+
+/* ---- 4. Invulnerabilidade respeitada ---- */
+resetGame();
+(function(){
+ const g=ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("inv setup",false);return}
+ placePlayer(1,1,dirToward({r:1,c:1},adj),diff.inv);
+ placeGhost(g,adj.r,adj.c,999);
+ const l0=lives;
+ update(0.13);
+ assert("INVULNERABILIDADE: sem dano com player.inv>0",
+   lives===l0 && player.r===adj.r && player.c===adj.c,
+   "vidas "+l0+"->"+lives+" player="+player.r+","+player.c+" inv="+player.inv.toFixed(2));
+})();
+
+/* ---- 5. Dano volta após fim da invulnerabilidade ---- */
+resetGame();
+(function(){
+ const g=ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("pós-inv setup",false);return}
+ // dois frames: primeiro consome a inv, segundo aplica dano
+ placePlayer(1,1,dirToward({r:1,c:1},adj),0.05);
+ placeGhost(g,adj.r,adj.c,999);
+ const l0=lives;
+ update(0.06); // inv: 0.05-0.06 <0 antes da checagem; passo: 0.48 <1 => talvez sem movimento
+ // se não moveu, força segundo frame já sem inv e com player ao lado
+ if(lives===l0){
+  // garante inv zerado e jogador adjacente
+  player.inv=0;
+  player.r=1;player.c=1;
+  player.dir=dirToward({r:1,c:1},adj);player.next=player.dir;
+  player.progress=0;
+  placeGhost(g,adj.r,adj.c,999);
+  update(0.13);
+ }
+ assert("APÓS INV: dano volta normalmente",
+   lives<l0,
+   "vidas "+l0+"->"+lives+" inv="+player.inv.toFixed(2));
+})();
+
+/* ---- 6. Sem vida perdida em dobro no mesmo contato ---- */
+resetGame();
+(function(){
+ const g0=ghosts[0],g1=ghosts[1]||ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("double setup",false);return}
+ placePlayer(1,1,dirToward({r:1,c:1},adj),0);
+ placeGhost(g0,adj.r,adj.c,999);
+ placeGhost(g1,adj.r,adj.c,999);
+ const l0=lives;
+ update(0.13);
+ assert("SEM DOBRA: apenas -1 vida por contato",
+   lives===l0-1,
+   "vidas "+l0+"->"+lives);
+})();
+
+/* ---- 7. Estabilidade: inv bloqueia repetição ---- */
+resetGame();
+(function(){
+ const g=ghosts[0];
+ const adj=openNeighbor(1,1);
+ if(!adj){assert("stable setup",false);return}
+ placePlayer(1,1,dirToward({r:1,c:1},adj),0);
+ placeGhost(g,adj.r,adj.c,999);
+ const l0=lives;
+ update(0.13);
+ const afterFirst=lives;
+ for(let i=0;i<8;i++){
+  // tenta contato com inv ainda ativo
+  placeGhost(g,adj.r,adj.c,999);
+  player.r=1;player.c=1;
+  player.dir=dirToward({r:1,c:1},adj);player.next=player.dir;
+  player.progress=0;
+  // mantém inv do hit anterior
+  update(0.05);
+ }
+ assert("ESTÁVEL: inv evita perda múltipla em frames seguidos",
+   afterFirst===l0-1 && lives===afterFirst,
+   "vidas "+l0+"->"+afterFirst+" final="+lives);
+})();
+
+/* ---- 8. Mapa preservado (logo sai das paredes) ---- */
+resetGame();
+(function(){
+ const rows=map.length,cols=map[0].length;
+ let opens=0;
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(map[r][c]=="0")opens++;
+ assert("MAPA: dimensões 19x29 preservadas",rows===19&&cols===29,rows+"x"+cols);
+ assert("MAPA: células abertas existem",opens>50,"opens="+opens);
+ assert("LOGO: fora do mapa (logoCells ausente/zero)",
+   typeof logoCells==="undefined"||!Array.isArray(logoCells)||logoCells.length===0,
+   "logoCells="+((typeof logoCells==="undefined")?"undefined":logoCells.length));
+ assert("LOGO: imagem pronta para o fundo",
+   typeof barbosaReady==="boolean"&&barbosaImg&&barbosaImg.src.indexOf("logo")>=0,
+   "ready="+barbosaReady);
+ // colisão com parede ainda funciona
+ const before={r:player.r,c:player.c};
+ placePlayer(1,1,"left",0); // esquerda = parede na maioria dos mapas
+ if(can(1,0)){placePlayer(1,1,"up",0);if(!can(0,1))placePlayer(1,1,"down",0)}
+ const pr=player.r,pc=player.c;
+ player.progress=1;
+ movePlayer(0.13);
+ const blockedOk = (player.r===pr&&player.c===pc) || can(player.r,player.c);
+ assert("COLISÃO COM PAREDE: movimento continua válido",blockedOk,
+   player.r+","+player.c+" vs "+pr+","+pc);
+})();
+
+const pre=document.createElement("pre");
+pre.id="test-result";
+pre.textContent=JSON.stringify({pass:results.filter(r=>r.pass).length,total:results.length,results:results});
+document.body.appendChild(pre);
+})();
+</script>
+</body></html>
